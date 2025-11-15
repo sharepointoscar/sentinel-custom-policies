@@ -1,0 +1,95 @@
+# Naming Convention Policy for AWS Landing Zone
+# Enforces standardized resource naming across all AWS resources
+# Aligned with HashiCorp Validated Pattern for AWS Landing Zones
+#
+# Naming Pattern: {environment}-{resource-type}-{purpose}-{region}
+# Example: prod-vpc-main-us-east-1
+#
+# Reference: https://developer.hashicorp.com/validated-patterns/terraform/build-aws-lz-with-terraform
+
+##### Imports #####
+import "tfplan/v2" as tfplan
+import "strings"
+
+##### Functions #####
+
+# Get all resources that have a name or name_prefix attribute
+get_named_resources = func() {
+  named_resources = []
+
+  for tfplan.resource_changes as rc {
+    # Skip data sources and resources being destroyed
+    if rc.mode is "managed" and (rc.change.actions contains "create" or rc.change.actions contains "update") {
+      # Check if resource has name, name_prefix, or tags.Name
+      if rc.change.after.name else null is not null or
+         rc.change.after.name_prefix else null is not null or
+         (rc.change.after.tags.Name else null) is not null {
+        named_resources += [rc]
+      }
+    }
+  }
+
+  return named_resources
+}
+
+# Validate resource name follows convention
+validate_naming_convention = func(resource) {
+  # Get the resource name
+  name = resource.change.after.name else resource.change.after.name_prefix else resource.change.after.tags.Name else ""
+
+  # Skip empty names
+  if name is "" {
+    return true
+  }
+
+  # Convert to lowercase for validation
+  name_lower = strings.to_lower(name)
+
+  # Check if name starts with environment prefix
+  valid_prefixes = ["dev-", "test-", "prod-", "shared-", "security-", "network-", "log-"]
+
+  has_valid_prefix = false
+  for valid_prefixes as prefix {
+    if strings.has_prefix(name_lower, prefix) {
+      has_valid_prefix = true
+      break
+    }
+  }
+
+  if not has_valid_prefix {
+    print("Resource", resource.address, "has invalid name:", name)
+    print("Name must start with one of:", valid_prefixes)
+    return false
+  }
+
+  # Check name doesn't contain invalid characters (only lowercase, numbers, hyphens)
+  # This is a basic check - adjust regex as needed
+  if strings.contains(name, "_") or strings.contains(name, " ") {
+    print("Resource", resource.address, "name contains invalid characters:", name)
+    print("Use hyphens (-) instead of underscores (_) or spaces")
+    return false
+  }
+
+  return true
+}
+
+##### Main Logic #####
+
+# Get all named resources
+named_resources = get_named_resources()
+
+# Validate each resource
+validated = true
+
+for named_resources as resource {
+  if not validate_naming_convention(resource) {
+    validated = false
+  }
+}
+
+##### Rules #####
+
+# Main rule with soft-mandatory enforcement (can be overridden)
+main = rule {
+  validated
+}

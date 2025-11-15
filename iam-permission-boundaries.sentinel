@@ -1,0 +1,143 @@
+# IAM Permission Boundary Policy for AWS Landing Zone
+# Prevents creation of overly permissive IAM roles and policies
+# Enforces principle of least privilege
+# Aligned with HashiCorp Validated Pattern for AWS Landing Zones
+#
+# Requirements:
+# 1. All IAM roles must have a permission boundary attached
+# 2. IAM policies cannot contain wildcard (*) actions on all resources
+# 3. IAM policies cannot grant iam:PassRole without conditions
+# 4. Administrative privileges require explicit approval
+#
+# Reference: https://developer.hashicorp.com/validated-patterns/terraform/build-aws-lz-with-terraform
+
+##### Imports #####
+import "tfplan/v2" as tfplan
+import "strings"
+
+##### Functions #####
+
+# Get all IAM roles from the plan
+get_iam_roles = func() {
+  roles = []
+
+  for tfplan.resource_changes as rc {
+    if rc.type is "aws_iam_role" and (rc.change.actions contains "create" or rc.change.actions contains "update") {
+      roles += [rc]
+    }
+  }
+
+  return roles
+}
+
+# Get all IAM policies from the plan
+get_iam_policies = func() {
+  policies = []
+
+  for tfplan.resource_changes as rc {
+    if rc.type in ["aws_iam_policy", "aws_iam_role_policy"] and (rc.change.actions contains "create" or rc.change.actions contains "update") {
+      policies += [rc]
+    }
+  }
+
+  return policies
+}
+
+# Validate IAM role has permission boundary
+validate_permission_boundary = func(role) {
+  permissions_boundary = role.change.after.permissions_boundary else null
+
+  # Allow platform core workspaces to create roles without boundaries (for bootstrap)
+  # You may want to remove this exception for stricter enforcement
+  tags = role.change.after.tags else {}
+  if "Workspace" in keys(tags) and tags["Workspace"] in ["org_root", "security", "identity"] {
+    return true
+  }
+
+  if permissions_boundary is null or permissions_boundary is "" {
+    print("IAM Role", role.address, "does not have a permission boundary attached")
+    print("All IAM roles must have a permission boundary for least privilege enforcement")
+    return false
+  }
+
+  return true
+}
+
+# Validate IAM policy doesn't contain dangerous wildcards
+validate_policy_wildcards = func(policy) {
+  # Get the policy document
+  policy_doc = policy.change.after.policy else "{}"
+
+  # Check for dangerous patterns (this is a simplified check)
+  # In production, you'd want to parse the JSON properly
+  dangerous_patterns = [
+    "\"Action\": \"*\"",
+    "\"Resource\": \"*\"",
+    "iam:*",
+    "s3:*",
+  ]
+
+  for dangerous_patterns as pattern {
+    if strings.contains(policy_doc, pattern) {
+      # Check if it's truly unrestricted (both Action and Resource are *)
+      if strings.contains(policy_doc, "\"Action\": \"*\"") and strings.contains(policy_doc, "\"Resource\": \"*\"") {
+        print("IAM Policy", policy.address, "contains unrestricted wildcard permissions")
+        print("Policy grants all actions (*) on all resources (*)")
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+# Validate PassRole has conditions
+validate_pass_role = func(policy) {
+  policy_doc = policy.change.after.policy else "{}"
+
+  # Check if policy contains iam:PassRole
+  if strings.contains(policy_doc, "iam:PassRole") {
+    # Check if it has conditions (simplified check)
+    # In production, parse JSON and validate Condition block exists
+    if not strings.contains(policy_doc, "Condition") {
+      print("IAM Policy", policy.address, "grants iam:PassRole without conditions")
+      print("PassRole must be restricted with conditions to prevent privilege escalation")
+      return false
+    }
+  }
+
+  return true
+}
+
+##### Main Logic #####
+
+# Validate IAM Roles
+iam_roles = get_iam_roles()
+roles_validated = true
+
+for iam_roles as role {
+  if not validate_permission_boundary(role) {
+    roles_validated = false
+  }
+}
+
+# Validate IAM Policies
+iam_policies = get_iam_policies()
+policies_validated = true
+
+for iam_policies as policy {
+  if not validate_policy_wildcards(policy) {
+    policies_validated = false
+  }
+
+  if not validate_pass_role(policy) {
+    policies_validated = false
+  }
+}
+
+##### Rules #####
+
+# Main rule
+main = rule {
+  roles_validated and policies_validated
+}

@@ -1,0 +1,161 @@
+# Mandatory Tagging Policy for AWS Landing Zone
+# Enforces required tags on all AWS resources for cost tracking and compliance
+# Aligned with HashiCorp Validated Pattern for AWS Landing Zones
+#
+# Required Tags:
+# - Environment: dev, test, prod
+# - Owner: Email address of resource owner
+# - CostCenter: Department or cost center code
+#
+# Reference: https://developer.hashicorp.com/validated-patterns/terraform/build-aws-lz-with-terraform
+
+##### Imports #####
+import "tfplan/v2" as tfplan
+import "strings"
+
+##### Functions #####
+
+# Get all resources from tfplan that support tags
+get_taggable_resources = func() {
+  taggable_resources = []
+
+  # List of AWS resource types that support tags
+  taggable_types = [
+    "aws_instance",
+    "aws_vpc",
+    "aws_subnet",
+    "aws_security_group",
+    "aws_s3_bucket",
+    "aws_db_instance",
+    "aws_rds_cluster",
+    "aws_efs_file_system",
+    "aws_lambda_function",
+    "aws_ec2_transit_gateway",
+    "aws_cloudtrail",
+    "aws_cloudwatch_log_group",
+    "aws_kms_key",
+    "aws_iam_role",
+    "aws_guardduty_detector",
+    "aws_config_configuration_recorder",
+    "aws_ecr_repository",
+    "aws_ecs_cluster",
+    "aws_eks_cluster",
+    "aws_lb",
+    "aws_lb_target_group",
+    "aws_nat_gateway",
+    "aws_eip",
+    "aws_route53_zone",
+    "aws_sns_topic",
+    "aws_sqs_queue",
+    "aws_dynamodb_table",
+  ]
+
+  # Iterate through all resource changes
+  for tfplan.resource_changes as rc {
+    # Check if resource type is taggable
+    if rc.type in taggable_types {
+      # Skip resources being destroyed
+      if rc.change.actions not contains "delete" or rc.change.actions contains "create" {
+        taggable_resources += [rc]
+      }
+    }
+  }
+
+  return taggable_resources
+}
+
+# Validate that a resource has all required tags
+validate_tags = func(resource, required_tags) {
+  # Get tags from the resource (after the change is applied)
+  tags = resource.change.after.tags else {}
+
+  # Check if all required tags are present
+  missing_tags = []
+
+  for required_tags as tag_key {
+    if tag_key not in keys(tags) {
+      missing_tags += [tag_key]
+    } else if tags[tag_key] is "" or tags[tag_key] is null {
+      missing_tags += [tag_key]
+    }
+  }
+
+  # Return validation result
+  if length(missing_tags) > 0 {
+    print("Resource", resource.address, "is missing required tags:", missing_tags)
+    return false
+  }
+
+  return true
+}
+
+# Validate Environment tag has allowed values
+validate_environment_tag = func(resource) {
+  tags = resource.change.after.tags else {}
+  allowed_environments = ["dev", "test", "prod", "shared", "security", "network"]
+
+  if "Environment" in keys(tags) {
+    env_value = strings.to_lower(tags["Environment"])
+    if env_value not in allowed_environments {
+      print("Resource", resource.address, "has invalid Environment tag value:", tags["Environment"])
+      print("Allowed values:", allowed_environments)
+      return false
+    }
+  }
+
+  return true
+}
+
+# Validate Owner tag is an email address
+validate_owner_tag = func(resource) {
+  tags = resource.change.after.tags else {}
+
+  if "Owner" in keys(tags) {
+    owner_value = tags["Owner"]
+    if not strings.contains(owner_value, "@") {
+      print("Resource", resource.address, "has invalid Owner tag. Must be an email address, got:", owner_value)
+      return false
+    }
+  }
+
+  return true
+}
+
+##### Required Tags #####
+mandatory_tags = [
+  "Environment",
+  "Owner",
+  "CostCenter",
+]
+
+##### Main Logic #####
+
+# Get all taggable resources
+taggable_resources = get_taggable_resources()
+
+# Validate each resource
+validated = true
+
+for taggable_resources as resource {
+  # Check for presence of mandatory tags
+  if not validate_tags(resource, mandatory_tags) {
+    validated = false
+  }
+
+  # Validate Environment tag value
+  if not validate_environment_tag(resource) {
+    validated = false
+  }
+
+  # Validate Owner tag format
+  if not validate_owner_tag(resource) {
+    validated = false
+  }
+}
+
+##### Rules #####
+
+# Main rule
+main = rule {
+  validated
+}
