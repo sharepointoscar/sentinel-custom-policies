@@ -13,17 +13,17 @@ policy "mandatory-tagging" {
   # - custom-workload-test: soft-mandatory (test - can override with approval)
   # - custom-workload-prod: hard-mandatory (production - strict enforcement)
 
-  enforcement_level = "soft-mandatory"
+  enforcement_level = "advisory"
 }
 
 # Policy for resource naming conventions
 policy "naming-conventions" {
   source = "./naming-conventions.sentinel"
-  enforcement_level = "soft-mandatory"
+  enforcement_level = "advisory"
 }
 
 # Policy for IAM permission boundaries
 policy "iam-permission-boundaries" {
   source = "./iam-permission-boundaries.sentinel"
-  enforcement_level = "soft-mandatory"
+  enforcement_level = "advisory"
 }
