@@ -1,0 +1,37 @@
+resource_changes = {
+  "aws_vpc.main": {
+    "address": "aws_vpc.main",
+    "mode": "managed",
+    "type": "aws_vpc",
+    "name": "main",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "cidr_block": "10.0.0.0/16",
+        "tags": {
+          "Name": "my-vpc-main", # Invalid prefix - doesn't start with environment
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_s3_bucket.data": {
+    "address": "aws_s3_bucket.data",
+    "mode": "managed",
+    "type": "aws_s3_bucket",
+    "name": "data",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "bucket": "staging-bucket-data", # Invalid prefix - "staging" not in allowed list
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

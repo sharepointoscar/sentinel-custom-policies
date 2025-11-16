@@ -21,8 +21,8 @@ import "strings"
 get_iam_roles = func() {
   roles = []
 
-  for tfplan.resource_changes as rc {
-    if rc.type is "aws_iam_role" and (rc.change.actions contains "create" or rc.change.actions contains "update") {
+  for tfplan.resource_changes as address, rc {
+    if rc.type is "aws_iam_role" and ("create" in rc.change.actions or "update" in rc.change.actions) {
       roles += [rc]
     }
   }
@@ -34,8 +34,8 @@ get_iam_roles = func() {
 get_iam_policies = func() {
   policies = []
 
-  for tfplan.resource_changes as rc {
-    if rc.type in ["aws_iam_policy", "aws_iam_role_policy"] and (rc.change.actions contains "create" or rc.change.actions contains "update") {
+  for tfplan.resource_changes as address, rc {
+    if rc.type in ["aws_iam_policy", "aws_iam_role_policy"] and ("create" in rc.change.actions or "update" in rc.change.actions) {
       policies += [rc]
     }
   }
@@ -77,15 +77,12 @@ validate_policy_wildcards = func(policy) {
     "s3:*",
   ]
 
-  for dangerous_patterns as pattern {
-    if strings.contains(policy_doc, pattern) {
-      # Check if it's truly unrestricted (both Action and Resource are *)
-      if strings.contains(policy_doc, "\"Action\": \"*\"") and strings.contains(policy_doc, "\"Resource\": \"*\"") {
-        print("IAM Policy", policy.address, "contains unrestricted wildcard permissions")
-        print("Policy grants all actions (*) on all resources (*)")
-        return false
-      }
-    }
+  # Check if it's truly unrestricted (both Action and Resource are *)
+  # Handle both compact and formatted JSON (with or without spaces)
+  if (policy_doc matches ".*\"Action\"\\s*:\\s*\"\\*\".*") and (policy_doc matches ".*\"Resource\"\\s*:\\s*\"\\*\".*") {
+    print("IAM Policy", policy.address, "contains unrestricted wildcard permissions")
+    print("Policy grants all actions (*) on all resources (*)")
+    return false
   }
 
   return true
@@ -96,10 +93,10 @@ validate_pass_role = func(policy) {
   policy_doc = policy.change.after.policy else "{}"
 
   # Check if policy contains iam:PassRole
-  if strings.contains(policy_doc, "iam:PassRole") {
+  if policy_doc matches ".*iam:PassRole.*" {
     # Check if it has conditions (simplified check)
     # In production, parse JSON and validate Condition block exists
-    if not strings.contains(policy_doc, "Condition") {
+    if not (policy_doc matches ".*Condition.*") {
       print("IAM Policy", policy.address, "grants iam:PassRole without conditions")
       print("PassRole must be restricted with conditions to prevent privilege escalation")
       return false

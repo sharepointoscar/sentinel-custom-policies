@@ -1,0 +1,21 @@
+resource_changes = {
+  "aws_iam_policy.passrole": {
+    "address": "aws_iam_policy.passrole",
+    "mode": "managed",
+    "type": "aws_iam_policy",
+    "name": "passrole",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "passrole-policy",
+        # iam:PassRole without Condition block
+        "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"iam:PassRole\",\"Resource\":\"*\"}]}",
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

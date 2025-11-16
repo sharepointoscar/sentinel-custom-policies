@@ -1,0 +1,39 @@
+resource_changes = {
+  "aws_iam_role.app_role": {
+    "address": "aws_iam_role.app_role",
+    "mode": "managed",
+    "type": "aws_iam_role",
+    "name": "app_role",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "prod-app-role",
+        "permissions_boundary": "arn:aws:iam::123456789012:policy/DeveloperBoundary",
+        "tags": {
+          "Environment": "prod",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_iam_policy.s3_read": {
+    "address": "aws_iam_policy.s3_read",
+    "mode": "managed",
+    "type": "aws_iam_policy",
+    "name": "s3_read",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "s3-read-policy",
+        "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Resource\":\"arn:aws:s3:::my-bucket/*\"}]}",
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

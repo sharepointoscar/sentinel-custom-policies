@@ -1,0 +1,21 @@
+resource_changes = {
+  "aws_iam_policy.admin": {
+    "address": "aws_iam_policy.admin",
+    "mode": "managed",
+    "type": "aws_iam_policy",
+    "name": "admin",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "admin-policy",
+        # Dangerous wildcard permissions - Action: "*" and Resource: "*"
+        "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

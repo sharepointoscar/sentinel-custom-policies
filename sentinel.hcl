@@ -3,8 +3,8 @@
 # Reference: https://developer.hashicorp.com/sentinel/docs/configuration
 
 # Policy for mandatory resource tagging
-policy "mandatory-tagging" {
-  source = "./mandatory-tagging.sentinel"
+policy "mandatory_tagging" {
+  source = "./mandatory_tagging.sentinel"
 
   # Enforcement levels by policy set:
   # - custom-platform-core: hard-mandatory (production platform infrastructure)
@@ -17,13 +17,13 @@ policy "mandatory-tagging" {
 }
 
 # Policy for resource naming conventions
-policy "naming-conventions" {
-  source = "./naming-conventions.sentinel"
+policy "naming_conventions" {
+  source = "./naming_conventions.sentinel"
   enforcement_level = "soft-mandatory"
 }
 
 # Policy for IAM permission boundaries
-policy "iam-permission-boundaries" {
-  source = "./iam-permission-boundaries.sentinel"
+policy "iam_permission_boundaries" {
+  source = "./iam_permission_boundaries.sentinel"
   enforcement_level = "hard-mandatory"
 }

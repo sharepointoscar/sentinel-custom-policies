@@ -1,0 +1,23 @@
+resource_changes = {
+  "aws_iam_role.app_role": {
+    "address": "aws_iam_role.app_role",
+    "mode": "managed",
+    "type": "aws_iam_role",
+    "name": "app_role",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "prod-app-role",
+        # Missing permissions_boundary
+        "tags": {
+          "Environment": "prod",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

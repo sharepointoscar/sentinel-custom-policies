@@ -1,0 +1,38 @@
+# Sentinel CLI
+.sentinel/
+*.sentinel.json
+
+# Test artifacts
+test-results/
+*.tfplan
+*.tfplan.json
+*.binary
+
+# Mock data (uncommit if you want to version control mocks)
+# mock-*.sentinel
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Terraform files (if testing locally)
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+.cache/

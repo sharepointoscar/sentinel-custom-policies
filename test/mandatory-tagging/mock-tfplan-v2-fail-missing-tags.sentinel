@@ -1,0 +1,41 @@
+resource_changes = {
+  "aws_s3_bucket.test_bucket": {
+    "address": "aws_s3_bucket.test_bucket",
+    "mode": "managed",
+    "type": "aws_s3_bucket",
+    "name": "test_bucket",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "bucket": "my-test-bucket",
+        "tags": {
+          "Environment": "dev",
+          # Missing Owner and CostCenter tags
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_vpc.main": {
+    "address": "aws_vpc.main",
+    "mode": "managed",
+    "type": "aws_vpc",
+    "name": "main",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "cidr_block": "10.0.0.0/16",
+        "tags": {
+          # Missing all required tags
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

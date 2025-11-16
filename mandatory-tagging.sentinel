@@ -51,11 +51,11 @@ get_taggable_resources = func() {
   ]
 
   # Iterate through all resource changes
-  for tfplan.resource_changes as rc {
+  for tfplan.resource_changes as address, rc {
     # Check if resource type is taggable
     if rc.type in taggable_types {
       # Skip resources being destroyed
-      if rc.change.actions not contains "delete" or rc.change.actions contains "create" {
+      if "delete" not in rc.change.actions or "create" in rc.change.actions {
         taggable_resources += [rc]
       }
     }
@@ -112,7 +112,7 @@ validate_owner_tag = func(resource) {
 
   if "Owner" in keys(tags) {
     owner_value = tags["Owner"]
-    if not strings.contains(owner_value, "@") {
+    if not (owner_value matches ".*@.*") {
       print("Resource", resource.address, "has invalid Owner tag. Must be an email address, got:", owner_value)
       return false
     }

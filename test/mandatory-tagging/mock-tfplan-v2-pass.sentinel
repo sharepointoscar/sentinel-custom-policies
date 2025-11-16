@@ -1,0 +1,45 @@
+resource_changes = {
+  "aws_s3_bucket.test_bucket": {
+    "address": "aws_s3_bucket.test_bucket",
+    "mode": "managed",
+    "type": "aws_s3_bucket",
+    "name": "test_bucket",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "bucket": "prod-s3-data-us-east-1",
+        "tags": {
+          "Environment": "prod",
+          "Owner": "ops-team@example.com",
+          "CostCenter": "engineering-001",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_vpc.main": {
+    "address": "aws_vpc.main",
+    "mode": "managed",
+    "type": "aws_vpc",
+    "name": "main",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "cidr_block": "10.0.0.0/16",
+        "tags": {
+          "Environment": "prod",
+          "Owner": "platform-team@example.com",
+          "CostCenter": "platform-002",
+          "Name": "prod-vpc-main-us-east-1",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

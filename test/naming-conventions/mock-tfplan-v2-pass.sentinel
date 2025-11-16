@@ -1,0 +1,52 @@
+resource_changes = {
+  "aws_vpc.main": {
+    "address": "aws_vpc.main",
+    "mode": "managed",
+    "type": "aws_vpc",
+    "name": "main",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "cidr_block": "10.0.0.0/16",
+        "tags": {
+          "Name": "prod-vpc-main-us-east-1",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_s3_bucket.data": {
+    "address": "aws_s3_bucket.data",
+    "mode": "managed",
+    "type": "aws_s3_bucket",
+    "name": "data",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "bucket": "dev-s3-analytics-us-west-2",
+      },
+      "after_unknown": {},
+    },
+  },
+  "aws_security_group.app": {
+    "address": "aws_security_group.app",
+    "mode": "managed",
+    "type": "aws_security_group",
+    "name": "app",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "name": "test-sg-application-us-east-1",
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}

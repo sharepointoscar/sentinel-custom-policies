@@ -1,0 +1,24 @@
+resource_changes = {
+  "aws_s3_bucket.test_bucket": {
+    "address": "aws_s3_bucket.test_bucket",
+    "mode": "managed",
+    "type": "aws_s3_bucket",
+    "name": "test_bucket",
+    "provider_name": "registry.terraform.io/hashicorp/aws",
+    "change": {
+      "actions": ["create"],
+      "before": null,
+      "after": {
+        "bucket": "my-test-bucket",
+        "tags": {
+          "Environment": "production", # Invalid - should be "prod" not "production"
+          "Owner": "ops-team@example.com",
+          "CostCenter": "engineering-001",
+        },
+      },
+      "after_unknown": {},
+    },
+  },
+}
+
+output_changes = {}
